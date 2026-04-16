@@ -7,7 +7,7 @@
 - [ ] Add Docs to repo  
 - [x] ~~Create Simple react webpage~~  
 - [ ] Create basic server  
-      - [ ] 
+
 
 # Random bits
 
@@ -19,8 +19,6 @@ My Help \- Spiritual Resource Companion
 - [x] ~~define the **AI output format/prompt contract** so the interpreter returns tags the backend can reliably use.~~  
 - [ ] backend service responsibilities  
 - [ ] define the **fallback logic** when matching is weak or AI output is bad  
-- [ ] define the **actual implementation order** so you know what to build first, second, third  
-- [ ] 
 
 # Vision / Purpose
 
@@ -231,6 +229,24 @@ listen
 expand
 
 save
+
+Flow 1A — Clarification When Initial Match Is Weak
+
+If the initial help response is too weak or too generic, the frontend may ask the user one clarifying follow-up question.
+
+Example:
+“Can you tell me a little more about how you’re feeling right now?”
+
+The frontend may also provide a small set of example feeling words, such as:
+anxious, afraid, alone, ashamed, discouraged, confused, overwhelmed.
+
+The user then submits a refined response.
+
+The frontend sends the refined input to the backend as a new help request.
+
+If the second response is still weak, the app should stop asking for clarification and instead show the best available help bundle.
+
+This clarification behavior should be limited to one additional prompt per help attempt, so users are not trapped in a repeated loop.
 
 Flow 2 — Guest User Saves a Resource
 
@@ -2567,3 +2583,180 @@ User message:
 "I feel frustrated and stuck and don't know what to do."
 
 Return strict JSON only.
+
+AI test cases
+
+1. Anxiety / overwhelm
+curl -X POST http://localhost:3000/api/help -H "Content-Type: application/json" -d '{"input":"I feel anxious and overwhelmed and my mind will not slow down","sessionId":"test-1"}'
+Result: "primary": "anxiety",
+"secondary": ["overwhelm"]
+"solutions": {
+  "peace": 1,
+  "trust": 1,
+  "rest": 1
+}
+Note:
+Strong match. AI interpretation, mapping, and scoring all behaved as expected. Good baseline case for system correctness.
+2. Loneliness
+curl -X POST http://localhost:3000/api/help -H "Content-Type: application/json" -d '{"input":"I feel completely alone and like nobody really understands me","sessionId":"test-2"}'
+Result:
+"primary": "loneliness",
+"secondary": []
+"solutions": {
+"comfort": 1,
+"presence": 1,
+"love": 1
+}
+Note:
+Single-emotion case. AI correctly returned no secondary tags.
+3. Shame / guilt
+curl -X POST http://localhost:3000/api/help -H "Content-Type: application/json" -d '{"input":"I feel ashamed of what I have done and I cannot forgive myself","sessionId":"test-3"}'
+Result:
+"primary": "shame",
+"secondary": ["guilt"]
+"solutions": {
+"love": 1,
+"acceptance": 1,
+"identity": 1,
+"forgiveness": 1,
+"grace": 1,
+"cleansing": 1
+}
+
+Note:
+Improved after updating the map and adding "guilt" to approved tags. AI interpretation is now more precise, and solutions are populated correctly. Current result is only a weak partial match, which shows a resource coverage gap rather than a problem with interpretation or mapping.
+4. Grief / loss
+curl -X POST http://localhost:3000/api/help -H "Content-Type: application/json" -d '{"input":"I lost someone close to me and I do not know how to process it","sessionId":"test-4"}'
+Result:
+"primary": "grief",
+"secondary": ["loss", "confusion"]
+"solutions": {
+"comfort": 2,
+"hope": 2,
+"presence": 2,
+"wisdom": 1,
+"direction": 1,
+"clarity": 1
+}
+
+Note:
+Strong multi-tag interpretation. AI correctly identified grief as primary with appropriate secondary tags. Mapping produced weighted solutions (higher weights for overlapping concepts like comfort/hope/presence), showing that the weighting system is working as intended. Returned resource is a reasonable but still indirect match, indicating good system behavior but limited resource coverage for grief-specific content.
+5. Confusion / directionless
+curl -X POST http://localhost:3000/api/help -H "Content-Type: application/json" -d '{"input":"I do not know what direction to take in life and I feel stuck","sessionId":"test-5"}'
+Result:
+"primary": "directionless",
+"secondary": ["confusion", "helplessness"]
+"solutions": {
+"direction": 2,
+"purpose": 1,
+"guidance": 1,
+"wisdom": 1,
+"clarity": 1,
+"help": 1,
+"trust": 1,
+"strength": 1
+}
+
+Note:
+Very strong interpretation and mapping. Good example of multiple tags combining to produce weighted solutions correctly.
+6. Temptation struggle
+curl -X POST http://localhost:3000/api/help -H "Content-Type: application/json" -d '{"input":"I keep falling into the same temptation and I feel weak","sessionId":"test-6"}'
+Result:
+"primary": "temptation",
+"secondary": ["helplessness", "guilt"]
+"solutions": {
+"strength": 2,
+"self-control": 1,
+"escape": 1,
+"help": 1,
+"trust": 1,
+"forgiveness": 1,
+"grace": 1,
+"cleansing": 1
+}
+
+Note:
+Excellent interpretation. AI captured both the behavioral struggle (temptation) and internal state (helplessness, guilt). Mapping produced a well-balanced set of solutions, and weighting correctly emphasized strength.
+7. Spiritual dryness
+curl -X POST http://localhost:3000/api/help -H "Content-Type: application/json" -d '{"input":"I feel distant from God and my heart feels cold","sessionId":"test-7"}'
+Result:
+"primary": "temptation",
+"secondary": ["helplessness", "guilt"]
+"solutions": {
+"strength": 2,
+"self-control": 1,
+"escape": 1,
+"help": 1,
+"trust": 1,
+"forgiveness": 1,
+"grace": 1,
+"cleansing": 1
+}
+
+Note:
+Excellent interpretation. AI captured both the behavioral struggle (temptation) and internal state (helplessness, guilt). Mapping produced a well-balanced set of solutions, and weighting correctly emphasized strength.
+8. Fear / uncertainty
+curl -X POST http://localhost:3000/api/help -H "Content-Type: application/json" -d '{"input":"I am afraid of what is coming next and I feel uncertain about everything","sessionId":"test-8"}'
+Result:
+"primary": "fear",
+"secondary": ["uncertainty"]
+"solutions": {
+"trust": 2,
+"peace": 2,
+"courage": 1,
+"faith": 1
+}
+
+Note:
+Very accurate interpretation. Strong alignment between fear and uncertainty, and weighting correctly elevated trust and peace as dominant solutions.
+9. Mixed emotions (good test)
+curl -X POST http://localhost:3000/api/help -H "Content-Type: application/json" -d '{"input":"I feel frustrated, tired, and like nothing is changing no matter what I do","sessionId":"test-9"}'
+Result:
+"primary": "frustration",
+"secondary": ["helplessness", "discouragement"]
+"solutions": {
+"help": 2,
+"surrender": 1,
+"peace": 1,
+"trust": 2,
+"strength": 2,
+"hope": 1
+}
+
+Note:
+Excellent multi-layer interpretation. AI correctly captured emotional progression (frustration → helplessness → discouragement). Weighting produced a strong and balanced solution set, and scoring clearly favored the most relevant resource.
+10. Subtle / harder case
+curl -X POST http://localhost:3000/api/help -H "Content-Type: application/json" -d '{"input":"I know God is there but I just feel disconnected and numb lately","sessionId":"test-10"}'
+Result:
+"primary": "spiritual dryness",
+"secondary": ["loneliness", "discouragement"]
+"solutions": {
+"renewal": 1,
+"presence": 2,
+"faith": 1,
+"comfort": 1,
+"love": 1,
+"hope": 1,
+"strength": 1,
+"trust": 1
+}
+
+Note:
+Excellent interpretation of a subtle input. AI correctly identified spiritual dryness with supporting emotional layers. Good example of handling nuanced, less explicit language.
+11. Edge Case - no real eomtions used.
+curl -X POST http://localhost:3000/api/help -H "Content-Type: application/json" -d '{"input":"I had a really hard conversation today.","sessionId":"fallback-test-1"}'
+Result:
+"primary": "conflict",
+"secondary": ["confusion", "frustration"]
+"solutions": {
+"peace": 2,
+"wisdom": 2,
+"reconciliation": 1,
+"direction": 1,
+"clarity": 1,
+"help": 1,
+"surrender": 1
+}
+
+Note:
+Good handling of a low-emotion input. AI inferred conflict from context and added reasonable secondary tags. Clarification triggered on first pass due to weak signal, and second pass returned best available results without looping.

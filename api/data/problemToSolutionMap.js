@@ -1,9 +1,25 @@
 const problemToSolutionMap = {
-  frustration: ["help", "surrender", "peace"],
-  helplessness: ["help", "trust", "strength"],
   anxiety: ["peace", "trust", "rest"],
   fear: ["trust", "peace", "courage"],
+  grief: ["comfort", "hope", "presence"],
+  shame: ["love", "acceptance", "identity"],
+  guilt: ["forgiveness", "grace", "cleansing"],
   loneliness: ["comfort", "presence", "love"],
+  discouragement: ["hope", "strength", "trust"],
+  frustration: ["help", "surrender", "peace"],
+  helplessness: ["help", "trust", "strength"],
+  overwhelm: ["peace", "rest", "surrender"],
+  confusion: ["wisdom", "direction", "clarity"],
+  temptation: ["strength", "self-control", "escape"],
+  uncertainty: ["trust", "faith", "peace"],
+  waiting: ["patience", "trust", "hope"],
+  conflict: ["peace", "wisdom", "reconciliation"],
+  suffering: ["comfort", "endurance", "hope"],
+  "spiritual dryness": ["renewal", "presence", "faith"],
+  directionless: ["direction", "purpose", "guidance"],
+  doubt: ["faith", "truth", "trust"],
+  pain: ["comfort", "healing", "presence"],
+  loss: ["comfort", "hope", "presence"],
 };
 
 export default problemToSolutionMap;

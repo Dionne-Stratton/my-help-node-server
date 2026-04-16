@@ -1,5 +1,8 @@
 import { createApp } from "./api/server.js";
+import dotenv from "dotenv";
+dotenv.config();
 
+console.log("ENV CHECK:", process.env.OPENAI_API_KEY);
 const PORT = Number(process.env.PORT) || 3000;
 const app = createApp();
 
