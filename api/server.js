@@ -1,7 +1,7 @@
 import cors from "cors";
 import express from "express";
 
-import matchRoutes from "./routes/matchRoutes.js";
+import helpRoutes from "./routes/helpRoutes.js";
 
 export function createApp() {
   const app = express();
@@ -13,7 +13,7 @@ export function createApp() {
     res.send("Server is running");
   });
 
-  app.use("/api/match", matchRoutes);
+  app.use("/api/help", helpRoutes);
 
   return app;
 }
