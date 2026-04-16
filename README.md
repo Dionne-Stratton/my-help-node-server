@@ -26,6 +26,12 @@ npm install
   npm start
   ```
 
+- **Kill the process using the API port** (default `3000`):
+
+  ```bash
+  npm run kill
+  ```
+
 By default the server listens on port **3000**. Override with the `PORT` environment variable.
 
 ## API
