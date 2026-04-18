@@ -31,3 +31,6 @@ Thumbs.db
 # Coverage / test artifacts (future)
 coverage/
 .nyc_output/
+
+#Sql
+.wrangler/

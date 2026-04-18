@@ -1,9 +1,24 @@
 import express from "express";
+import crypto from "crypto";
 import interpretHelpInput from "../services/interpretHelpInput.js";
 import mapProblemTags from "../services/mapProblemTags.js";
 import matchResources from "../services/matchResources.js";
 
 const router = express.Router();
+
+function cleanResource(resource) {
+  const { problemTags, solutionTags, ...cleaned } = resource;
+  return cleaned;
+}
+
+function cleanBundle(bundle) {
+  return {
+    scripture: bundle.scripture.map(cleanResource),
+    prayer: bundle.prayer.map(cleanResource),
+    reflection: bundle.reflection.map(cleanResource),
+    song: bundle.song.map(cleanResource),
+  };
+}
 
 router.post("/", async (req, res) => {
   try {
@@ -20,14 +35,12 @@ router.post("/", async (req, res) => {
     const problemTags = [interpretation.primary, ...interpretation.secondary];
 
     const solutionWeights = mapProblemTags(problemTags);
-    const results = matchResources(problemTags, solutionWeights);
+    const matchedBundle = matchResources(problemTags, solutionWeights);
+    const bundle = cleanBundle(matchedBundle);
 
     return res.json({
       sessionId: sessionId ?? null,
-      interpretation,
-      problems: problemTags,
-      solutions: solutionWeights,
-      results,
+      bundle,
     });
   } catch (error) {
     console.error("HELP ROUTE ERROR:", error.message);

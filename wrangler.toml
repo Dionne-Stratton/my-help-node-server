@@ -1,0 +1,8 @@
+name = "my-help-node-server"
+compatibility_date = "2026-04-18"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "my-help-db"
+database_id = "4000aa5b-fd33-4008-a11d-b0983587c193"
+migrations_dir = "api/migrations"
