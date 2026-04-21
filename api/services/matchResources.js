@@ -1,7 +1,9 @@
-import resources from "../data/resources.js";
-
-export default function matchResources(problemTags, solutionWeights) {
-  const scoredResults = resources.map((resource) => {
+export default function matchResources(
+  problemTags,
+  solutionWeights,
+  sourceResources,
+) {
+  const scoredResults = sourceResources.map((resource) => {
     let score = 0;
 
     for (const tag of resource.solutionTags) {

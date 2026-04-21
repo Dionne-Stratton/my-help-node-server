@@ -1,5 +1,6 @@
 name = "my-help-node-server"
 compatibility_date = "2026-04-18"
+main = "api/worker.js"
 
 [[d1_databases]]
 binding = "DB"

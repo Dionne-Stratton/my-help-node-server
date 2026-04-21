@@ -46,14 +46,14 @@ Return this exact shape:
 }
 `.trim();
 
-export default async function interpretHelpInput(input) {
+export default async function interpretHelpInput(input, options = {}) {
   const trimmedInput = input?.trim();
 
   if (!trimmedInput) {
     throw new Error("Input is required");
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = options.apiKey ?? globalThis?.process?.env?.OPENAI_API_KEY;
 
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not set");

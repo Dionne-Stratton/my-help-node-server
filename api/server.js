@@ -1,9 +1,10 @@
 import cors from "cors";
 import express from "express";
 
-import helpRoutes from "./routes/helpRoutes.js";
+import createHelpRouter from "./routes/helpRoutes.js";
 
-export function createApp() {
+export function createApp(options = {}) {
+  const { db } = options;
   const app = express();
 
   app.use(cors());
@@ -13,7 +14,7 @@ export function createApp() {
     res.send("Server is running");
   });
 
-  app.use("/api/help", helpRoutes);
+  app.use("/api/help", createHelpRouter(db));
 
   return app;
 }
