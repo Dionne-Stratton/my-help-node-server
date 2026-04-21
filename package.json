@@ -1,26 +1,22 @@
 {
   "name": "my-help-node-server",
   "version": "1.0.0",
-  "description": "Minimal Express REST API for my-help",
+  "description": "my-help API on Cloudflare Workers + D1",
   "type": "module",
-  "main": "index.js",
+  "main": "api/worker.js",
   "scripts": {
-    "start": "wrangler dev",
     "dev": "wrangler dev",
-    "kill": "node scripts/kill-port.js"
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy"
   },
   "engines": {
     "node": ">=18"
   },
   "license": "ISC",
   "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
     "openai": "^6.34.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14",
     "wrangler": "^4.83.0"
   }
 }

@@ -1,10 +1,11 @@
 # my-help-node-server
 
-Minimal [Express](https://expressjs.com/) REST API for the my-help project. CORS is enabled so a separate frontend (e.g. on another port or domain) can call this API from the browser.
+Cloudflare **Worker** + **D1** API for the my-help project. Entry: `api/worker.js` (see `wrangler.toml`).
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/) 18 or newer
+- Node.js 18+
+- A Cloudflare account (for deploy) and Wrangler CLI
 
 ## Setup
 
@@ -12,53 +13,41 @@ Minimal [Express](https://expressjs.com/) REST API for the my-help project. CORS
 npm install
 ```
 
-## Run
-
-- **Development** (auto-restart on file changes):
-
-  ```bash
-  npm run dev
-  ```
-
-- **Production-style** (no file watcher):
-
-  ```bash
-  npm start
-  ```
-
-- **Kill the process using the API port** (default `3000`):
-
-  ```bash
-  npm run kill
-  ```
-
-By default the server listens on port **3000**. Override with the `PORT` environment variable.
-
-## API
-
-| Method | Path      | Description        |
-| ------ | --------- | ------------------ |
-| GET    | `/health` | Liveness check JSON |
-
-Example:
+Set your OpenAI key for local dev (Wrangler reads this file; do not commit it):
 
 ```bash
-curl http://localhost:3000/health
+# .dev.vars in project root
+OPENAI_API_KEY=sk-...
 ```
 
-Response: `{"ok":true}`
+Or: `npx wrangler secret put OPENAI_API_KEY` (deployed Workers).
 
-## Project layout
+Apply D1 migrations once (local or remote DB per Wrangler docs):
+
+```bash
+npx wrangler d1 migrations apply my-help-db --local
+```
+
+## Run locally
+
+```bash
+npm run dev
+```
+
+Then call the Worker URL Wrangler prints (often `http://localhost:8787`):
+
+```bash
+curl -X POST http://localhost:8787/api/help \
+  -H "Content-Type: application/json" \
+  -d '{"input":"I feel anxious"}'
+```
+
+## Layout
 
 ```text
-index.js           # Entry: starts HTTP server
 api/
-  server.js        # Express app (CORS, JSON parser, routes)
-  routes/          # Route modules (add as you grow)
-  models/          # Data models
-  middleware/      # Custom middleware
+  worker.js              # Worker entry (fetch handler)
+  services/              # Business logic (OpenAI, D1, matching)
+  migrations/            # D1 SQL migrations
+wrangler.toml
 ```
-
-## Git
-
-This repository was initialized with `git init`. Track only source and config files; `node_modules` and local env files are ignored (see `.gitignore`).
