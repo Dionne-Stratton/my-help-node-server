@@ -1313,9 +1313,7 @@ That gives you enough for:
 - save feature
 - basic analytics and debugging
 
-If you want, next I can turn this into a **copy-paste D1 SQL migration file** with all tables, indexes, and a little sample seed data.
-
-# migrations/001_initial_schema.sql
+# migrations
 
 PRAGMA foreign_keys \= ON;
 
@@ -1335,56 +1333,6 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 \-- \=========================  
-\-- RESOURCES  
-\-- \=========================  
-CREATE TABLE IF NOT EXISTS resources (  
- id TEXT PRIMARY KEY,  
- type TEXT NOT NULL CHECK (  
- type IN ('scripture', 'prayer', 'reflection', 'song')  
- ),  
- slug TEXT NOT NULL UNIQUE,  
- title TEXT NOT NULL,  
- short_summary TEXT,  
- body_text TEXT, \-- short text content for immediate display  
- content_url TEXT, \-- long-form content page/file URL  
- media_url TEXT, \-- MP3/audio URL  
- image_url TEXT, \-- artwork/thumbnail URL  
- scripture_reference TEXT, \-- e.g. Psalm 121:1-2  
- scripture_translation TEXT, \-- e.g. WEB  
- status TEXT NOT NULL DEFAULT 'draft' CHECK (  
- status IN ('draft', 'published', 'archived')  
- ),  
- source_kind TEXT NOT NULL DEFAULT 'internal' CHECK (  
- source_kind IN ('internal', 'external')  
- ),  
- created_at TEXT NOT NULL,  
- updated_at TEXT NOT NULL  
-);
-
-\-- \=========================  
-\-- TAGS  
-\-- \=========================  
-CREATE TABLE IF NOT EXISTS tags (  
- id TEXT PRIMARY KEY,  
- name TEXT NOT NULL UNIQUE,  
- category TEXT NOT NULL CHECK (  
- category IN ('emotion', 'theme', 'situation')  
- ),  
- created_at TEXT NOT NULL  
-);
-
-\-- \=========================  
-\-- RESOURCE_TAGS  
-\-- \=========================  
-CREATE TABLE IF NOT EXISTS resource_tags (  
- resource_id TEXT NOT NULL,  
- tag_id TEXT NOT NULL,  
- PRIMARY KEY (resource_id, tag_id),  
- FOREIGN KEY (resource_id) REFERENCES resources(id) ON DELETE CASCADE,  
- FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE  
-);
-
-\-- \=========================  
 \-- SAVED_RESOURCES  
 \-- \=========================  
 CREATE TABLE IF NOT EXISTS saved_resources (  
@@ -1394,46 +1342,6 @@ CREATE TABLE IF NOT EXISTS saved_resources (
  created_at TEXT NOT NULL,  
  UNIQUE (user_id, resource_id),  
  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,  
- FOREIGN KEY (resource_id) REFERENCES resources(id) ON DELETE CASCADE  
-);
-
-\-- \=========================  
-\-- HELP_REQUESTS  
-\-- \=========================  
-CREATE TABLE IF NOT EXISTS help_requests (  
- id TEXT PRIMARY KEY,  
- user_id TEXT, \-- nullable for guests  
- session_id TEXT, \-- guest/session tracking  
- raw_input TEXT NOT NULL,  
- normalized_summary TEXT,  
- created_at TEXT NOT NULL,  
- FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL  
-);
-
-\-- \=========================  
-\-- HELP_REQUEST_TAGS  
-\-- \=========================  
-CREATE TABLE IF NOT EXISTS help_request_tags (  
- help_request_id TEXT NOT NULL,  
- tag_id TEXT NOT NULL,  
- confidence REAL,  
- PRIMARY KEY (help_request_id, tag_id),  
- FOREIGN KEY (help_request_id) REFERENCES help_requests(id) ON DELETE CASCADE,  
- FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE  
-);
-
-\-- \=========================  
-\-- HELP_REQUEST_RESOURCES  
-\-- \=========================  
-CREATE TABLE IF NOT EXISTS help_request_resources (  
- help_request_id TEXT NOT NULL,  
- resource_id TEXT NOT NULL,  
- slot TEXT NOT NULL CHECK (  
- slot IN ('scripture', 'prayer', 'reflection', 'song')  
- ),  
- rank_order INTEGER NOT NULL DEFAULT 0,  
- PRIMARY KEY (help_request_id, resource_id, slot),  
- FOREIGN KEY (help_request_id) REFERENCES help_requests(id) ON DELETE CASCADE,  
  FOREIGN KEY (resource_id) REFERENCES resources(id) ON DELETE CASCADE  
 );
 
@@ -1490,46 +1398,6 @@ CREATE INDEX IF NOT EXISTS idx_help_request_resources_resource_id
 
 CREATE INDEX IF NOT EXISTS idx_help_request_resources_slot  
  ON help_request_resources(slot);
-
-\-- \=========================  
-\-- STARTER TAGS  
-\-- \=========================  
-INSERT OR IGNORE INTO tags (id, name, category, created_at) VALUES  
- \-- Emotions  
- ('tag_emotion_anxiety', 'anxiety', 'emotion', CURRENT_TIMESTAMP),  
- ('tag_emotion_fear', 'fear', 'emotion', CURRENT_TIMESTAMP),  
- ('tag_emotion_grief', 'grief', 'emotion', CURRENT_TIMESTAMP),  
- ('tag_emotion_shame', 'shame', 'emotion', CURRENT_TIMESTAMP),  
- ('tag_emotion_loneliness', 'loneliness', 'emotion', CURRENT_TIMESTAMP),  
- ('tag_emotion_discouragement', 'discouragement', 'emotion', CURRENT_TIMESTAMP),  
- ('tag_emotion_frustration', 'frustration', 'emotion', CURRENT_TIMESTAMP),  
- ('tag_emotion_helplessness', 'helplessness', 'emotion', CURRENT_TIMESTAMP),  
- ('tag_emotion_overwhelm', 'overwhelm', 'emotion', CURRENT_TIMESTAMP),  
- ('tag_emotion_confusion', 'confusion', 'emotion', CURRENT_TIMESTAMP),
-
-\-- Themes  
- ('tag_theme_trust', 'trust', 'theme', CURRENT_TIMESTAMP),  
- ('tag_theme_hope', 'hope', 'theme', CURRENT_TIMESTAMP),  
- ('tag_theme_surrender', 'surrender', 'theme', CURRENT_TIMESTAMP),  
- ('tag_theme_comfort', 'comfort', 'theme', CURRENT_TIMESTAMP),  
- ('tag_theme_peace', 'peace', 'theme', CURRENT_TIMESTAMP),  
- ('tag_theme_perseverance', 'perseverance', 'theme', CURRENT_TIMESTAMP),  
- ('tag_theme_gods_faithfulness','God''s faithfulness', 'theme', CURRENT_TIMESTAMP),  
- ('tag_theme_identity', 'identity in Christ', 'theme', CURRENT_TIMESTAMP),  
- ('tag_theme_help', 'help', 'theme', CURRENT_TIMESTAMP),  
- ('tag_theme_guidance', 'guidance', 'theme', CURRENT_TIMESTAMP),
-
-\-- Situations  
- ('tag_situation_temptation', 'temptation', 'situation', CURRENT_TIMESTAMP),  
- ('tag_situation_uncertainty', 'uncertainty', 'situation', CURRENT_TIMESTAMP),  
- ('tag_situation_waiting', 'waiting', 'situation', CURRENT_TIMESTAMP),  
- ('tag_situation_conflict', 'conflict', 'situation', CURRENT_TIMESTAMP),  
- ('tag_situation_suffering', 'suffering', 'situation', CURRENT_TIMESTAMP),  
- ('tag_situation_spiritual_dryness','spiritual dryness','situation', CURRENT_TIMESTAMP),  
- ('tag_situation_directionless', 'directionless', 'situation', CURRENT_TIMESTAMP),  
- ('tag_situation_doubt', 'doubt', 'situation', CURRENT_TIMESTAMP),  
- ('tag_situation_pain', 'pain', 'situation', CURRENT_TIMESTAMP),  
- ('tag_situation_loss', 'loss', 'situation', CURRENT_TIMESTAMP);
 
 # src/types/index.ts
 
@@ -2420,6 +2288,95 @@ After scoring candidates, the backend selects the top resource(s) for each slot:
 The selected resources are stored in `help_request_resources` for traceability and future analytics.
 
 ---
+
+That’s a great instinct—this is exactly the kind of thing that’s easy to forget later but _really_ matters to UX.
+
+I looked through your doc, and the best place to put this is under:
+
+**“Resource Matching Logic (Version 1)” → right after “Step 6: Final Bundle Selection”**
+
+That section is already describing how the bundle is assembled, so this fits perfectly as a **post-selection refinement step**.
+
+---
+
+## Where to insert
+
+Right after this section:
+
+> ### Step 6: Final Bundle Selection
+
+Add a new section like:
+
+---
+
+## **Step 7: Bundle Coherence (Scripture Anchoring)**
+
+_(you can tweak the name, but this is clear and future-proof)_
+
+---
+
+## What to paste (clean implementation-ready summary)
+
+Here’s a tightened version of what we discussed, written in your doc style:
+
+---
+
+### **Step 7: Bundle Coherence (Scripture Anchoring)**
+
+In some cases, certain resources (especially prayers and reflections) are intentionally written based on a specific Scripture passage.
+
+If such a resource is selected but the related Scripture is not included in the bundle, the result may feel disconnected or incomplete.
+
+To address this, the system should apply a light coherence rule after the initial selection step.
+
+#### **Anchored Resources**
+
+Some resources may include a `scripture_reference` field indicating that they are directly based on a specific passage.
+
+This field is optional and should only be used when the connection is strong and explicit.
+
+---
+
+### **Coherence Rule**
+
+After selecting resources for each slot:
+
+1. Check selected **prayer** and **reflection** resources
+2. If a resource includes a `scripture_reference`:
+   - check whether that Scripture is already included in the selected Scripture list
+
+3. If the Scripture is **not** included:
+   - attempt to include it by replacing the lowest-ranked selected Scripture
+   - only if that Scripture exists in the resource library
+
+---
+
+### **Design Intent**
+
+This rule ensures that:
+
+- bundles remain **thematically coherent**
+- reflections and prayers feel **grounded in the Scripture they reference**
+- Scripture selection remains primarily **solution-driven**, not overridden by weaker associations
+
+---
+
+### **Important Constraints**
+
+- This is a **soft coherence rule**, not a primary matching mechanism
+- It should only apply when a resource is clearly anchored to a specific passage
+- It should not override strong Scripture matches unnecessarily
+- Songs may include scripture references but should **not trigger this rule in Version 1**
+
+---
+
+### **Future Enhancements (Optional)**
+
+In later versions, this system may be expanded to include:
+
+- stronger grouping between related resources
+- bundle-level cohesion scoring
+- user-aware variation (avoiding repetition while preserving coherence)
 
 ### **Matching Principles**
 

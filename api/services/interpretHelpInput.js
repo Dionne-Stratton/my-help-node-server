@@ -46,6 +46,29 @@ Return this exact shape:
 }
 `.trim();
 
+function normalizeTag(tag) {
+  if (typeof tag !== "string") {
+    return tag;
+  }
+
+  const cleaned = tag.trim().toLowerCase();
+
+  if (!cleaned) {
+    return cleaned;
+  }
+
+  if (APPROVED_TAGS.includes(cleaned)) {
+    return cleaned;
+  }
+
+  const underscoreToSpace = cleaned.replace(/_/g, " ");
+  if (APPROVED_TAGS.includes(underscoreToSpace)) {
+    return underscoreToSpace;
+  }
+
+  return cleaned;
+}
+
 export default async function interpretHelpInput(input, options = {}) {
   const trimmedInput = input?.trim();
 
@@ -92,9 +115,13 @@ Return strict JSON only.
     throw new Error("OpenAI returned invalid JSON");
   }
 
-  const { primary, secondary, normalizedSummary } = parsed;
+  const primary = normalizeTag(parsed.primary);
+  const secondaryRaw = Array.isArray(parsed.secondary)
+    ? parsed.secondary
+    : null;
+  const normalizedSummary = parsed.normalizedSummary ?? null;
 
-  if (!primary || !Array.isArray(secondary)) {
+  if (!primary || !Array.isArray(secondaryRaw)) {
     throw new Error("OpenAI response is missing required fields");
   }
 
@@ -102,7 +129,7 @@ Return strict JSON only.
     throw new Error(`Invalid primary tag returned: ${primary}`);
   }
 
-  const uniqueSecondary = [...new Set(secondary)];
+  const uniqueSecondary = [...new Set(secondaryRaw.map(normalizeTag))];
 
   for (const tag of uniqueSecondary) {
     if (!APPROVED_TAGS.includes(tag)) {
@@ -117,6 +144,6 @@ Return strict JSON only.
   return {
     primary,
     secondary: uniqueSecondary,
-    normalizedSummary: normalizedSummary ?? null,
+    normalizedSummary,
   };
 }
