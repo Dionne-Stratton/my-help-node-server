@@ -8,6 +8,7 @@ export default async function getResourcesFromDb(db) {
         r.title,
         r.slug,
         r.body_text,
+        r.scripture_reference,
         t.name AS tag,
         t.kind AS tag_kind
       FROM resources r
@@ -30,6 +31,7 @@ export default async function getResourcesFromDb(db) {
         title: row.title,
         slug: row.slug,
         body_text: row.body_text,
+        scripture_reference: row.scripture_reference,
         solutionTags: [],
         problemTags: [],
       };
