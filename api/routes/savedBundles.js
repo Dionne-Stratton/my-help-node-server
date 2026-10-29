@@ -5,7 +5,7 @@ const headers = {
   'Content-Type': 'application/json',
   'Cache-Control': 'no-store',
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
+  'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type,Authorization',
 };
 const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers });
@@ -33,6 +33,17 @@ async function readBody(request) {
     if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error();
     return data;
   } catch { throw new AuthenticationError('Request body must be a JSON object.', 400); }
+}
+
+function validateTitle(value) {
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new AuthenticationError('Please enter a name for this bundle.', 400);
+  }
+  const title = value.trim();
+  if (title.length > 120 || /[\u0000-\u001f\u007f]/.test(title)) {
+    throw new AuthenticationError('Use a name of 120 characters or fewer without line breaks.', 400);
+  }
+  return title;
 }
 
 // Dependency injection is only used by tests; production always validates Auth0 tokens.
@@ -66,6 +77,15 @@ export function createSavedBundleHandler(verifyUser = authenticate) {
         return reply({ item: { id: row.id, title: row.title, bundle: JSON.parse(row.bundle_json), createdAt: row.created_at } });
       }
 
+      if (id && request.method === 'PATCH') {
+        const body = await readBody(request);
+        const title = validateTitle(body.title);
+        const result = await env.DB.prepare('UPDATE saved_bundles SET title = ? WHERE id = ? AND user_subject = ?')
+          .bind(title, id, user.subject).run();
+        if (!result.meta.changes) return reply({ error: 'Saved bundle not found.' }, 404);
+        return reply({ item: { id, title } });
+      }
+
       if (id && request.method === 'DELETE') {
         const result = await env.DB.prepare('DELETE FROM saved_bundles WHERE id = ? AND user_subject = ?').bind(id, user.subject).run();
         return result.meta.changes ? reply({ success: true }) : reply({ error: 'Saved bundle not found.' }, 404);
@@ -97,8 +117,7 @@ export function createSavedBundleHandler(verifyUser = authenticate) {
           }
         }
         if (!count) return reply({ error: 'This bundle is empty.' }, 400);
-        const title = typeof body.title === 'string' && body.title.trim()
-          ? body.title.trim().slice(0, 120) : (bundle.scripture[0]?.title ?? 'A saved moment').slice(0, 120);
+        const title = body.title === undefined ? 'A saved moment' : validateTitle(body.title);
         const savedId = crypto.randomUUID();
         await env.DB.prepare(`INSERT INTO saved_bundles (id, user_subject, source_id, title, bundle_json, created_at)
           VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(user_subject, source_id) DO NOTHING`)

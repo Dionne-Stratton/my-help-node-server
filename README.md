@@ -66,12 +66,16 @@ application are checked with `jose` and the tenant's cached public JWKS.
 | GET | `/api/saved-bundles?before=CURSOR` | `read:saved_bundles` | Next page |
 | POST | `/api/saved-bundles` | `write:saved_bundles` | Saves a published-resource snapshot |
 | GET | `/api/saved-bundles/:id` | `read:saved_bundles` | Loads the caller's saved bundle |
+| PATCH | `/api/saved-bundles/:id` | `write:saved_bundles` | Renames the caller's bundle with `{ "title": "New name" }` |
 | DELETE | `/api/saved-bundles/:id` | `write:saved_bundles` | Removes the caller's saved bundle |
 
 POST body: `{ "sourceId": "a-client-generated-moment-id", "resourceIds": {
 "scripture": ["resource-id"], "prayer": [], "reflection": [], "song": [] } }`.
-An optional `title` is trimmed to 120 characters; otherwise the first scripture
-resource title is used. The same source ID saves only once per account. Snapshot
+An optional `title` is trimmed and must contain 1-120 characters without line
+breaks or control characters; the default is "A saved moment". PATCH requires a
+valid title and checks the same owner and write scope as save/delete. Duplicate
+names are allowed for separate requests. Renaming changes neither the resource
+snapshot nor the original save date, and requires no new migration. The same source ID saves only once per account. Snapshot
 content is read from published database resources, never trusted from browser
 content. Ownership always comes from the verified token subject; client-supplied
 user IDs have no effect. Responses are `Cache-Control: no-store`. Original help
@@ -90,3 +94,5 @@ and request-size limits. They do not invoke OpenAI or require private API keys.
 A real Auth0 sign-in/signup/password-reset email test is still required before
 release. The Auth0 app is configured for the Cloudflare frontend origin and
 localhost/127.0.0.1 on port 5173; custom domains must be registered explicitly.
+
+The public `/api/help` response includes `primaryTag`, the existing interpretation's primary problem tag, for suggesting a bundle name in the frontend. This does not make any additional AI request.

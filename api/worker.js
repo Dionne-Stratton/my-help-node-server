@@ -6,7 +6,7 @@ import matchResources from "./services/matchResources.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
+  "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
 };
 
@@ -93,6 +93,7 @@ async function handleHelpRequest(request, env) {
 
     return json({
       sessionId: sessionId ?? null,
+      primaryTag: interpretation.primary,
       interpretation,
       bundle,
       debug: {

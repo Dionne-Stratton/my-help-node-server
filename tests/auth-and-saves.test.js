@@ -122,4 +122,34 @@ test('production worker protects saved routes and allows authorization preflight
   assert.equal(response.status, 204);
   assert.match(response.headers.get('Access-Control-Allow-Headers'), /Authorization/);
   assert.match(response.headers.get('Access-Control-Allow-Methods'), /DELETE/);
+  assert.match(response.headers.get('Access-Control-Allow-Methods'), /PATCH/);
+});
+
+test('explicit names persist and separate requests may share the same name', async () => {
+  const db = database();
+  const first = await (await handler(request('', { method: 'POST', body: { ...saveBody, title: 'Sad' } }), db)).json();
+  const second = await (await handler(request('', { method: 'POST', body: { ...saveBody, sourceId: 'moment-2', title: 'Sad' } }), db)).json();
+  assert.equal(first.item.title, 'Sad'); assert.equal(second.item.title, 'Sad');
+  assert.notEqual(first.item.id, second.item.id);
+});
+test('renaming changes only the name and is restricted to the owner and write scope', async () => {
+  const db = database();
+  const { item } = await (await handler(request('', { method: 'POST', body: { ...saveBody, title: 'Sad' } }), db)).json();
+  const before = db.sqlite.prepare('SELECT bundle_json, created_at FROM saved_bundles WHERE id = ?').get(item.id);
+  assert.equal((await handler(request(`/${item.id}`, { user: 'bob', method: 'PATCH', body: { title: 'Forged rename' } }), db)).status, 404);
+  assert.equal((await handler(request(`/${item.id}`, { method: 'PATCH', scopes: 'read:saved_bundles', body: { title: 'Missing scope' } }), db)).status, 403);
+  const renamed = await handler(request(`/${item.id}`, { method: 'PATCH', body: { title: '  Sad - morning comfort  ' } }), db);
+  assert.equal(renamed.status, 200); assert.equal((await renamed.json()).item.title, 'Sad - morning comfort');
+  const detail = await (await handler(request(`/${item.id}`), db)).json();
+  assert.equal(detail.item.title, 'Sad - morning comfort');
+  assert.deepEqual(db.sqlite.prepare('SELECT bundle_json, created_at FROM saved_bundles WHERE id = ?').get(item.id), before);
+  assert.equal((await (await handler(request(), db)).json()).items[0].title, 'Sad - morning comfort');
+});
+test('save and rename reject blank, non-text, excessive and multiline names', async () => {
+  const db = database();
+  const { item } = await (await handler(request('', { method: 'POST', body: { ...saveBody, title: 'Sad' } }), db)).json();
+  for (const title of ['', '   ', null, 12, 'x'.repeat(121), 'two\nlines']) {
+    assert.equal((await handler(request('', { method: 'POST', body: { ...saveBody, sourceId: 'invalid', title } }), db)).status, 400);
+    assert.equal((await handler(request(`/${item.id}`, { method: 'PATCH', body: { title } }), db)).status, 400);
+  }
 });
