@@ -4,7 +4,7 @@ Cloudflare **Worker** + **D1** API for the my-help project. Entry: `api/worker.j
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 22.13+ (or Node 24) for the documented test workflow
 - A Cloudflare account (for deploy) and Wrangler CLI
 
 ## Setup
@@ -22,7 +22,7 @@ OPENAI_API_KEY=sk-...
 
 Or: `npx wrangler secret put OPENAI_API_KEY` (deployed Workers).
 
-Apply D1 migrations once (local or remote DB per Wrangler docs):
+For a fresh local database, apply the checked-in schema migrations:
 
 ```bash
 npx wrangler d1 migrations apply my-help-db --local
@@ -81,10 +81,21 @@ content. Ownership always comes from the verified token subject; client-supplied
 user IDs have no effect. Responses are `Cache-Control: no-store`. Original help
 input is not included in saved bundles. No billing or subscriptions are added.
 
-Before testing locally, run `npx wrangler d1 migrations apply my-help-db --local`
-to apply `003_saved_bundles.sql`, then `npm run dev` (normally port 8787). Use the
+For an existing local database, apply only `003_saved_bundles.sql` if its table
+is missing, then start `npm run dev` (normally port 8787):
+
+```bash
+npx wrangler d1 execute my-help-db --local --file=./api/migrations/003_saved_bundles.sql
+```
+
+If this schema has already been applied successfully, skip it. Older seed files
+may have been executed manually without Wrangler migration-history entries;
+rerunning their inserts can produce UNIQUE constraint errors. Do not rerun all
+historical seeds to test saving. These account changes need only the new table
+and index; naming and renaming add no further migration.
+ Use the
 matching frontend branch `feature/auth0-saved-bundles`, which uses port 5173.
-For release, apply remote migrations intentionally, deploy this backend, then
+For release, apply the missing saved-bundle schema to the intended remote database, deploy this backend, then
 deploy the matching frontend. No live D1 data or Worker was changed by this work.
 
 `npm test` runs JWT verification and SQLite-backed route tests with Node 22.13+
@@ -96,3 +107,12 @@ release. The Auth0 app is configured for the Cloudflare frontend origin and
 localhost/127.0.0.1 on port 5173; custom domains must be registered explicitly.
 
 The public `/api/help` response includes `primaryTag`, the existing interpretation's primary problem tag, for suggesting a bundle name in the frontend. This does not make any additional AI request.
+
+## Documentation and scope
+
+[Current accounts and saved bundles](docs/05_accounts_and_saved_bundles.md) records
+the implemented storage, ownership, and API behavior. Earlier product/design
+notes remain useful background but do not establish implemented routes.
+Independent browsing is undecided and has no public API in this branch. Future
+browse work and matching/scoring adjustments should use separate branches.
+Shared Auth0 login branding is deferred; the existing tenant branding is unchanged.
