@@ -1,3 +1,5 @@
+> Design notes: see [Current accounts and saved bundles](05_accounts_and_saved_bundles.md) for implemented authentication, storage, and API behavior. Whole bundles are saved; independent browsing remains undecided. Clarification and fallback behavior described here should be checked against the current handler before treating it as implemented.
+
 # Vision & Product (Version 1)
 
 ## Vision / Purpose

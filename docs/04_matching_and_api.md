@@ -1,3 +1,5 @@
+> Design notes: see [Current accounts and saved bundles](05_accounts_and_saved_bundles.md) for implemented authentication, storage, and API behavior. Whole bundles are saved; independent browsing remains undecided. Clarification and fallback behavior described here should be checked against the current handler before treating it as implemented.
+
 # Matching Logic & API Behavior (Version 1)
 
 ## Overview
@@ -347,7 +349,7 @@ The system should never:
 ## Long-Term Possibilities
 
 - expand to all resource types
-- allow saving bundles
+- extend existing whole-bundle saving if future exploration needs it
 - personalized recommendations
 - learning user preferences
 

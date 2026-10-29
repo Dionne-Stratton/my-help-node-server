@@ -1,3 +1,5 @@
+> Design notes: see [Current accounts and saved bundles](05_accounts_and_saved_bundles.md) for implemented authentication, storage, and API behavior. Whole bundles are saved; independent browsing remains undecided. Clarification and fallback behavior described here should be checked against the current handler before treating it as implemented.
+
 # Backend & Data (Version 1)
 
 ## Overview
@@ -41,7 +43,7 @@ The system is designed to be:
 
 ### Backend
 
-- Node.js / Express (current implementation)
+- Cloudflare Worker (`api/worker.js`), with D1 storage
 - Handles routing, logic, and orchestration
 
 ---
@@ -66,6 +68,7 @@ AI does NOT:
   - resources
   - tags
   - mappings
+  - account-owned saved bundle snapshots
 
 ---
 
