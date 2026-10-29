@@ -115,4 +115,7 @@ the implemented storage, ownership, and API behavior. Earlier product/design
 notes remain useful background but do not establish implemented routes.
 Independent browsing is undecided and has no public API in this branch. Future
 browse work and matching/scoring adjustments should use separate branches.
-Shared Auth0 login branding is deferred; the existing tenant branding is unchanged.
+Auth0’s shared English login/signup and consent wording uses the application
+name rather than the music-site account name. The shared music logo was removed;
+hosted pages currently show a generic Auth0 icon. This is live tenant
+configuration, not a backend deployment or database change.

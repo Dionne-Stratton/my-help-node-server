@@ -45,4 +45,4 @@ GET collection returns up to 20 summaries at a time, newest first, with `nextCur
 
 Apply only missing schema on existing databases; do not rerun historical seed inserts. See the README for the targeted local command. Naming needs no migration beyond `003_saved_bundles.sql`. Deploy schema and backend before the matching frontend.
 
-Independent resource browsing remains undecided. Shared Auth0 branding is deferred. Use separate feature branches for browsing if approved and for future scoring/weighting changes.
+Independent resource browsing remains undecided. Auth0’s English login/signup descriptions and consent wording now use `${clientName}` instead of referencing the music-site account. The shared music logo was removed; a generic Auth0 icon remains in the verified hosted pages. These live tenant changes require no backend deployment or migration. Use separate feature branches for browsing if approved and for future scoring/weighting changes.
