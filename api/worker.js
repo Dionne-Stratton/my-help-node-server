@@ -26,8 +26,29 @@ function cleanResource(resource) {
   return cleaned;
 }
 
-function cleanBundle(bundle) {
+function cleanDebugResource(resource) {
   return {
+    id: resource.id,
+    type: resource.type,
+    title: resource.title,
+    slug: resource.slug,
+    scripture_reference: resource.scripture_reference,
+    score: resource.score,
+    problemTags: resource.problemTags,
+    solutionTags: resource.solutionTags,
+  };
+}
+
+function formatSolutionTags(solutionWeights) {
+  return Object.entries(solutionWeights)
+    .map(([name, weight]) => ({ name, weight }))
+    .sort((a, b) => b.weight - a.weight);
+}
+
+function cleanBundle(bundle, { problemTags, solutionWeights }) {
+  return {
+    problemTags,
+    solutionTags: formatSolutionTags(solutionWeights),
     scripture: bundle.scripture.map(cleanResource),
     prayer: bundle.prayer.map(cleanResource),
     reflection: bundle.reflection.map(cleanResource),
@@ -54,19 +75,34 @@ async function handleHelpRequest(request, env) {
     const interpretation = await interpretHelpInput(input, {
       apiKey: env.OPENAI_API_KEY,
     });
+
     const problemTags = [interpretation.primary, ...interpretation.secondary];
     const solutionWeights = await mapProblemTags(env.DB, problemTags);
     const resources = await getResourcesFromDb(env.DB);
+
     const matchedBundle = matchResources(
       problemTags,
       solutionWeights,
       resources,
     );
-    const bundle = cleanBundle(matchedBundle);
+
+    const bundle = cleanBundle(matchedBundle, {
+      problemTags,
+      solutionWeights,
+    });
 
     return json({
       sessionId: sessionId ?? null,
+      interpretation,
       bundle,
+      debug: {
+        input,
+        interpretation,
+        problemTags,
+        solutionTags: formatSolutionTags(solutionWeights),
+        rankedResources:
+          matchedBundle.debug.rankedResources.map(cleanDebugResource),
+      },
     });
   } catch (error) {
     console.error("HELP ROUTE ERROR:", error?.message ?? error);

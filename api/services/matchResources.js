@@ -30,27 +30,19 @@ export default function matchResources(
     .sort((a, b) => b.score - a.score);
 
   const scriptures = ranked.filter((r) => r.type === "scripture").slice(0, 3);
-  console.log(
-    "Initial scriptures:",
-    scriptures.map((s) => s.scripture_reference),
-  );
   const prayer = ranked.filter((r) => r.type === "prayer").slice(0, 1);
   const reflection = ranked.filter((r) => r.type === "reflection").slice(0, 1);
   const song = ranked.filter((r) => r.type === "song").slice(0, 1);
 
-  // helper: check if scripture already included
   function hasScripture(reference) {
     return scriptures.some((s) => s.scripture_reference === reference);
   }
 
-  // helper: find scripture by reference
   function findScripture(reference) {
     return ranked.find(
       (r) => r.type === "scripture" && r.scripture_reference === reference,
     );
   }
-
-  // ---- anchor logic ----
 
   const prayerRef = prayer[0]?.scripture_reference;
   if (prayerRef && !hasScripture(prayerRef)) {
@@ -68,13 +60,13 @@ export default function matchResources(
     }
   }
 
-  console.log("Prayer ref:", prayerRef);
-  console.log("Reflection ref:", reflectionRef);
-
   return {
     scripture: scriptures,
     prayer,
     reflection,
     song,
+    debug: {
+      rankedResources: ranked,
+    },
   };
 }
