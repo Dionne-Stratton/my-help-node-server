@@ -1,3 +1,4 @@
+import { savedBundleRoutes } from "./routes/savedBundles.js";
 import getResourcesFromDb from "./services/getResourcesFromDb.js";
 import interpretHelpInput from "./services/interpretHelpInput.js";
 import mapProblemTags from "./services/mapProblemTags.js";
@@ -5,8 +6,8 @@ import matchResources from "./services/matchResources.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization",
 };
 
 function json(data, status = 200, extraHeaders = {}) {
@@ -85,6 +86,10 @@ export default {
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+
+    if (url.pathname === "/api/saved-bundles" || url.pathname.startsWith("/api/saved-bundles/")) {
+      return savedBundleRoutes(request, env);
     }
 
     if (request.method === "GET" && url.pathname === "/") {

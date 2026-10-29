@@ -51,3 +51,42 @@ api/
   migrations/            # D1 SQL migrations
 wrangler.toml
 ```
+
+## Optional Auth0 accounts and saved bundles
+
+The `/api/help` endpoint remains public. `/api/saved-bundles` requires a signed
+RS256 Auth0 API access token; its issuer, audience, expiry, subject, and authorized
+application are checked with `jose` and the tenant's cached public JWKS.
+`AUTH0_DOMAIN`, `AUTH0_AUDIENCE`, and `AUTH0_CLIENT_ID` are public configuration in
+`wrangler.toml`, not secrets. Do not use an ID token as the API bearer token.
+
+| Method | Route | Scope | Behavior |
+| --- | --- | --- | --- |
+| GET | `/api/saved-bundles` | `read:saved_bundles` | Returns up to 20 summaries, newest first, and `nextCursor` |
+| GET | `/api/saved-bundles?before=CURSOR` | `read:saved_bundles` | Next page |
+| POST | `/api/saved-bundles` | `write:saved_bundles` | Saves a published-resource snapshot |
+| GET | `/api/saved-bundles/:id` | `read:saved_bundles` | Loads the caller's saved bundle |
+| DELETE | `/api/saved-bundles/:id` | `write:saved_bundles` | Removes the caller's saved bundle |
+
+POST body: `{ "sourceId": "a-client-generated-moment-id", "resourceIds": {
+"scripture": ["resource-id"], "prayer": [], "reflection": [], "song": [] } }`.
+An optional `title` is trimmed to 120 characters; otherwise the first scripture
+resource title is used. The same source ID saves only once per account. Snapshot
+content is read from published database resources, never trusted from browser
+content. Ownership always comes from the verified token subject; client-supplied
+user IDs have no effect. Responses are `Cache-Control: no-store`. Original help
+input is not included in saved bundles. No billing or subscriptions are added.
+
+Before testing locally, run `npx wrangler d1 migrations apply my-help-db --local`
+to apply `003_saved_bundles.sql`, then `npm run dev` (normally port 8787). Use the
+matching frontend branch `feature/auth0-saved-bundles`, which uses port 5173.
+For release, apply remote migrations intentionally, deploy this backend, then
+deploy the matching frontend. No live D1 data or Worker was changed by this work.
+
+`npm test` runs JWT verification and SQLite-backed route tests with Node 22.13+
+(or Node 24). Tests cover wrong issuers/audiences/apps/signatures, expired and ID
+tokens, cross-account access, retries, unpublished resources, scopes, pagination,
+and request-size limits. They do not invoke OpenAI or require private API keys.
+A real Auth0 sign-in/signup/password-reset email test is still required before
+release. The Auth0 app is configured for the Cloudflare frontend origin and
+localhost/127.0.0.1 on port 5173; custom domains must be registered explicitly.

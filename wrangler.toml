@@ -7,3 +7,7 @@ binding = "DB"
 database_name = "my-help-db"
 database_id = "4000aa5b-fd33-4008-a11d-b0983587c193"
 migrations_dir = "api/migrations"
+[vars]
+AUTH0_DOMAIN = "dev-t2whljcmqk7brtx1.us.auth0.com"
+AUTH0_AUDIENCE = "https://myhelp-api"
+AUTH0_CLIENT_ID = "SBOao6kDdL3NmGpWNrKTQUQuccBaTXwo"
